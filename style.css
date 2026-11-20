@@ -118,6 +118,20 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 }
 .sheet label { display: grid; gap: 6px; font-size: .85rem; font-weight: 600; color: var(--muted); position: relative; }
 .sheet .btn { justify-self: end; }
+.sheet .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--text); font-size: .95rem; }
+.sheet .toggle small { display: block; color: var(--muted); font-weight: 500; font-size: .78rem; }
+/* iOS-style switch (native "switch" on Safari 17.4+, drawn here elsewhere) */
+.toggle input {
+  -webkit-appearance: none; appearance: none; flex: none; position: relative; cursor: pointer;
+  width: 51px; height: 31px; border-radius: 999px; background: var(--hairline); border: 1px solid var(--glass-edge);
+  transition: background .25s;
+}
+.toggle input::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 25px; height: 25px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .25s cubic-bezier(.3,1.4,.5,1);
+}
+.toggle input:checked { background: var(--good); }
+.toggle input:checked::after { transform: translateX(20px); }
 @keyframes rise { from { opacity: 0; transform: translateY(-8px) scale(.98); } }
 
 select, textarea {
@@ -264,3 +278,4 @@ textarea { margin-bottom: 12px; resize: vertical; border-radius: 20px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before { animation: none !important; transition: none !important; }
 }
+.sheet label > .pill { position: absolute; right: 0; top: -2px; }

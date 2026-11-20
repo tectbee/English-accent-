@@ -4,6 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const synth = window.speechSynthesis;
+  const buzz = (k) => window.haptic && window.haptic(k);
 
   // ---------- storage ----------
   const store = {
@@ -308,6 +309,7 @@
       $("verdict").textContent = "I didn't catch anything.";
       $("heard").textContent = "—";
       $("feedback").textContent = "Speak a little louder and closer to the microphone, then try again.";
+      buzz("warn");
       return;
     }
     const text = targetText();
@@ -316,6 +318,7 @@
     scoreEl.textContent = r.score + "%";
     scoreEl.style.setProperty("--p", r.score);
     scoreEl.classList.add(r.score >= 85 ? "good" : r.score >= 60 ? "mid" : "low");
+    buzz(r.score >= 85 ? "success" : r.score >= 60 ? "warn" : "error");
     $("verdict").textContent = r.score === 100 ? "Excellent — every word was clear!" :
       r.score >= 85 ? "Very good — nearly perfect." :
       r.score >= 60 ? "Good effort — a few words were unclear." : "Keep practising — listen again and copy the rhythm.";
@@ -446,6 +449,7 @@
         quiz.n++;
         const right = w === word;
         if (right) quiz.ok++;
+        buzz(right ? "success" : "error");
         b.classList.add(right ? "right" : "wrong");
         if (!right) [...box.children].find((x) => x.textContent === word).classList.add("right");
         $("quizMsg").textContent = right ? "Correct! " : `Not quite — it was “${word}”. Tap both words to hear the difference.`;
@@ -476,7 +480,9 @@
     if (top.includes(word)) {
       msg.innerHTML = `<b class="good-t">Clear!</b> I heard “${escapeHtml(res.alts[0].text)}”.`;
       record(word, 100, [], [word]);
+      buzz("success");
     } else if (partner && top.includes(partner)) {
+      buzz("error");
       msg.innerHTML = `<b class="bad-t">That sounded like “${escapeHtml(partner)}”.</b> ${escapeHtml(sound.tip)}`;
       record(word, 0, [word], []);
     } else if (anyAlt) {
@@ -549,6 +555,11 @@
     sheet.hidden = !sheet.hidden;
     $("settingsBtn").setAttribute("aria-expanded", !sheet.hidden);
   };
+  const hapt = $("hapticsToggle");
+  if (window.hapticsEnabled) {
+    hapt.checked = window.hapticsEnabled.get();
+    hapt.onchange = () => window.hapticsEnabled.set(hapt.checked);
+  } else hapt.closest("label").hidden = true;
   $("settingsDone").onclick = () => { sheet.hidden = true; $("settingsBtn").setAttribute("aria-expanded", "false"); };
 
   // ---------- init ----------
