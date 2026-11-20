@@ -78,7 +78,9 @@
 
   let active = null; // currently running capture, so a second click stops it
   /** Records audio and runs recognition together. Resolves {alts:[{text,conf}], blob}. */
-  async function capture(button) {
+  // opts.long: keep listening through pauses (free speaking) until the user taps stop.
+  // opts.onInterim(text): live transcript while speaking.
+  async function capture(button, opts = {}) {
     if (active) { active.stop(); return null; }
     if (synth) synth.cancel();
     const lbl = button.querySelector(".lbl") || button; // keep icons inside the button
@@ -103,22 +105,27 @@
       if (!SR) return; // recording only: the user stops manually
       const r = new SR();
       r.lang = lang();
-      r.interimResults = false;
-      r.continuous = false; // ends by itself when you stop talking
+      r.interimResults = !!opts.onInterim;
+      r.continuous = !!opts.long; // short mode ends by itself when you stop talking
       r.maxAlternatives = 5;
       const finals = [];
       r.onresult = (e) => {
+        let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
           if (e.results[i].isFinal) finals.push(Array.from(e.results[i]).map((a) => ({ text: a.transcript, conf: a.confidence })));
+          else interim += e.results[i][0].transcript;
         }
+        if (opts.onInterim) opts.onInterim((finals.map((f) => f[0].text.trim()).join(" ") + " " + interim).trim());
       };
       r.onerror = (e) => { if (e.error === "not-allowed") alert("Please allow microphone access to check your pronunciation."); };
       r.onend = () => resolve(combine(finals));
       active.recognizer = r;
       r.start();
+      if (opts.long) active.timer = setTimeout(() => r.stop(), 120000); // safety limit: 2 minutes
     });
 
     const alts = await Promise.race([recog, manualStop]);
+    clearTimeout(active && active.timer);
     active = null;
     lbl.textContent = label;
     button.classList.remove("live");
@@ -535,6 +542,7 @@
     if (!confirm("Clear all your progress?")) return;
     progress = { attempts: 0, total: 0, misses: {}, history: [], days: [] };
     save();
+    document.dispatchEvent(new Event("ac:reset"));
     renderProgress();
   };
 
@@ -542,7 +550,8 @@
   function showTab(name) {
     document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === name));
     document.querySelectorAll(".panel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
-    $("pageTitle").textContent = { practice: "Speak", sounds: "Sounds", progress: "Progress" }[name];
+    $("pageTitle").textContent = { practice: "Accent", sounds: "Sounds", vocab: "Vocabulary", progress: "Progress" }[name];
+    document.dispatchEvent(new CustomEvent("ac:tab", { detail: name }));
     if (name === "progress") renderProgress();
     window.scrollTo({ top: 0 });
     store.set("tab", name);
@@ -562,8 +571,11 @@
   } else hapt.closest("label").hidden = true;
   $("settingsDone").onclick = () => { sheet.hidden = true; $("settingsBtn").setAttribute("aria-expanded", "false"); };
 
+  // shared helpers for the vocabulary module (js/vocab.js)
+  window.AC = { speak, capture, words, buzz, store, showTab, hasRecognition: !!SR };
+
   // ---------- init ----------
   selectSound(store.get("sound", D.sounds[0].id));
   newTarget();
-  showTab(store.get("tab", "practice"));
+  document.addEventListener("DOMContentLoaded", () => showTab(store.get("tab", "practice")));
 })();

@@ -17,6 +17,12 @@ A browser tool for improving your English pronunciation and accent. It needs no 
 - **Say it:** say one word of a pair. If you said the wrong one, the app tells you which word it heard.
 - Practice sentences for each sound.
 
+**Vocab:** speaking practice built around new words, in 7 topics (Daily life, Feelings, Food, Travel, Work & study, Opinions, People).
+1. Learn the word: meaning, an example, and a 🔊 button to hear it.
+2. **Say the word** and the app checks your pronunciation.
+3. **Answer a question using the word.** Speak freely and watch your words appear live. You get 1–3 stars and feedback: did you use the word, how many words you said, your speaking speed, filler words (um, uh), and word variety.
+4. Two good answers master a word ✓.
+
 **Progress:** attempts, average score, a daily streak, and a list of the words you miss most. Words drop off the list as you get them right.
 
 ## Run it

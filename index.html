@@ -23,7 +23,7 @@
   <header class="top">
     <div>
       <p class="eyebrow">Accent Coach</p>
-      <h1 id="pageTitle">Speak</h1>
+      <h1 id="pageTitle">Accent</h1>
     </div>
     <button id="settingsBtn" class="glass icon-btn" aria-label="Voice settings" aria-expanded="false" aria-controls="settingsSheet">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
@@ -146,12 +146,87 @@
     </div>
   </main>
 
+  <!-- VOCABULARY SPEAKING -->
+  <main id="tab-vocab" class="panel" hidden>
+    <div class="chips scroll" id="vocabTopics"></div>
+
+    <div class="topic-progress">
+      <span class="pill" id="vocabLevel">Beginner</span>
+      <span id="vocabCount" class="hint"></span>
+      <div class="bar"><i id="vocabBar"></i></div>
+    </div>
+
+    <div class="glass card word-card">
+      <div class="word-head">
+        <div>
+          <span class="pill" id="vPos"></span>
+          <h2 class="vword"><span id="vWord"></span> <span id="vMastered" class="badge" hidden>✓ Mastered</span></h2>
+        </div>
+        <button id="vWordListen" class="glass round small" aria-label="Hear the word">🔊</button>
+      </div>
+      <p id="vDef" class="vdef"></p>
+      <button id="vExListen" class="example" aria-label="Hear the example">
+        <span class="ex-label">Example 🔊</span>
+        <span id="vEx"></span>
+      </button>
+      <div class="word-foot">
+        <span class="dots" id="vDots"></span>
+        <div class="nav">
+          <button id="vPrev" class="glass icon-btn" aria-label="Previous word">‹</button>
+          <button id="vNext" class="glass icon-btn" aria-label="Next word">›</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass card">
+      <h3><span class="stepnum">1</span>Say the word</h3>
+      <p class="hint">Make sure you can pronounce it clearly first.</p>
+      <div class="row-actions">
+        <button id="vSay" class="btn glass" data-stop="■ Stop"><span class="lbl">🎤 Say it</span></button>
+      </div>
+      <p id="vSayMsg" class="feedback"></p>
+    </div>
+
+    <div class="glass card">
+      <h3><span class="stepnum">2</span>Answer using the word</h3>
+      <button id="vQListen" class="question" aria-label="Hear the question">
+        <span id="vQ"></span> <span aria-hidden="true">🔊</span>
+      </button>
+      <p class="hint">Talk for 20–30 seconds. Aim for <b id="vMinWords">10</b>+ words. Give a reason or an example.</p>
+      <div class="answer-dock">
+        <button id="vAnswer" class="mic" data-stop="Tap to stop" aria-label="Record your answer">
+          <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+          <span class="cap lbl">Tap to answer</span>
+        </button>
+      </div>
+      <p id="vLive" class="live-text" aria-live="polite" hidden></p>
+    </div>
+
+    <div id="vResult" class="glass card result" hidden>
+      <div class="stars" id="vStars"></div>
+      <p id="vVerdict" class="verdict center"></p>
+      <p class="heard-box" id="vHeard"></p>
+      <ul id="vChecks" class="checks"></ul>
+      <p id="vProgressMsg" class="progress-msg"></p>
+      <div class="row-actions center">
+        <button id="vRetry" class="btn glass">↻ Try again</button>
+        <button id="vNext2" class="btn tinted">Next word ›</button>
+      </div>
+    </div>
+
+    <div class="glass card">
+      <h3>Words in this topic</h3>
+      <div id="vocabList" class="list"></div>
+    </div>
+  </main>
+
   <!-- PROGRESS -->
   <main id="tab-progress" class="panel" hidden>
     <div class="stats">
       <div class="glass stat"><span id="stAttempts">0</span>attempts</div>
       <div class="glass stat"><span id="stAvg">–</span>average</div>
       <div class="glass stat"><span id="stStreak">0</span>day streak 🔥</div>
+      <div class="glass stat"><span id="stVocab">0</span>words mastered 📚</div>
     </div>
     <div class="glass card">
       <h3>Trouble words</h3>
@@ -169,11 +244,15 @@
   <nav class="glass tabbar tabs" role="tablist">
     <button role="tab" data-tab="practice" aria-selected="true">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
-      <span>Speak</span>
+      <span>Accent</span>
     </button>
     <button role="tab" data-tab="sounds" aria-selected="false">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/></svg>
       <span>Sounds</span>
+    </button>
+    <button role="tab" data-tab="vocab" aria-selected="false">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2V5z"/><path d="M4 20a2 2 0 0 0 2 1h13M9 8h6M9 12h4"/></svg>
+      <span>Vocab</span>
     </button>
     <button role="tab" data-tab="progress" aria-selected="false">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
@@ -184,6 +263,8 @@
   <script src="js/haptics.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/vocab-data.js"></script>
+  <script src="js/vocab.js"></script>
   <script src="js/install.js"></script>
 </body>
 </html>
