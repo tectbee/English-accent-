@@ -81,3 +81,6 @@ button:disabled { opacity: .45; cursor: default; }
 .good-t { color: var(--good); } .bad-t { color: var(--bad); }
 footer { color: var(--muted); font-size: .8rem; margin-top: 24px; text-align: center; }
 @media (max-width: 480px) { .target-text { font-size: 1.3rem; } .score { font-size: 1.9rem; min-width: 70px; } }
+.install { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; font-size: .9rem; }
+.install span { flex: 1 1 200px; }
+.install .ghost { padding: 6px 10px; }

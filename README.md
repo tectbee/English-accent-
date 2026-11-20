@@ -30,7 +30,14 @@ python3 -m http.server 8000
 # then open http://localhost:8000
 ```
 
-To use it on your phone, enable **GitHub Pages** for this repository (Settings → Pages → deploy from branch). The app is entirely static.
+## Add it to your home screen
+
+Accent Coach is an installable web app: it gets its own icon, opens full-screen and loads offline.
+A home-screen install needs HTTPS, so host it first. The free option is **GitHub Pages**: Settings → Pages → *Deploy from a branch* → pick the branch and `/ (root)`. It's then at `https://<user>.github.io/<repo>/`.
+
+- **Android (Chrome):** open the link and tap **Add to home screen** in the banner, or use ⋮ menu → *Install app*.
+- **iPhone / iPad (Safari):** tap **Share** → **Add to Home Screen**.
+- **Desktop (Chrome / Edge):** click the install icon in the address bar.
 
 ## How to practise (10 minutes a day)
 
