@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accent Coach</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Accent Coach</h1>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="practice" aria-selected="true">Speak</button>
+      <button role="tab" data-tab="sounds" aria-selected="false">Sounds</button>
+      <button role="tab" data-tab="progress" aria-selected="false">Progress</button>
+    </nav>
+  </header>
+
+  <div id="support" class="notice" hidden></div>
+
+  <section class="settings">
+    <label>Accent / voice
+      <select id="voice"></select>
+    </label>
+    <label>Speed <span id="rateVal">0.9×</span>
+      <input id="rate" type="range" min="0.5" max="1.2" step="0.05" value="0.9">
+    </label>
+  </section>
+
+  <!-- SPEAK -->
+  <main id="tab-practice" class="panel">
+    <div class="pick">
+      <select id="source">
+        <option value="sentences">Everyday sentences</option>
+        <option value="words">Tricky words</option>
+        <option value="review">My trouble words</option>
+        <option value="custom">My own text…</option>
+      </select>
+      <button id="prev" class="ghost" aria-label="Previous">‹</button>
+      <button id="next" class="ghost" aria-label="Next">›</button>
+    </div>
+    <textarea id="custom" rows="2" placeholder="Type or paste anything you want to practise…" hidden></textarea>
+
+    <div class="card target">
+      <p id="target" class="target-text"></p>
+      <p class="hint">Tap any word to hear it alone.</p>
+    </div>
+
+    <div class="actions">
+      <button id="listen" class="secondary">▶ Listen</button>
+      <button id="record" class="primary">● Record &amp; check</button>
+      <button id="playMine" class="secondary" disabled>▶ My voice</button>
+      <button id="compare" class="secondary" disabled>⇄ Compare</button>
+    </div>
+
+    <div id="result" class="card result" hidden>
+      <div class="score-row">
+        <div class="score" id="score">–</div>
+        <div>
+          <p id="verdict" class="verdict"></p>
+          <p class="heard">I heard: <em id="heard"></em></p>
+        </div>
+      </div>
+      <p id="feedback" class="feedback"></p>
+    </div>
+  </main>
+
+  <!-- SOUNDS -->
+  <main id="tab-sounds" class="panel" hidden>
+    <div class="chips" id="soundChips"></div>
+    <div class="card">
+      <h2 id="soundName"></h2>
+      <p id="soundTip" class="tip"></p>
+      <div id="pairs" class="pairs"></div>
+    </div>
+
+    <div class="card">
+      <h3>Ear training</h3>
+      <p class="hint">Listen and choose the word you hear. Hearing the difference comes before saying it.</p>
+      <div class="actions">
+        <button id="quizPlay" class="primary">▶ Play a word</button>
+        <span class="quiz-score" id="quizScore">0 / 0</span>
+      </div>
+      <div id="quizChoices" class="choices"></div>
+      <p id="quizMsg" class="feedback"></p>
+    </div>
+
+    <div class="card">
+      <h3>Say it</h3>
+      <p class="hint">Say the word shown. The recogniser has to tell it apart from its pair.</p>
+      <p id="sayWord" class="target-text small"></p>
+      <div class="actions">
+        <button id="sayListen" class="secondary">▶ Listen</button>
+        <button id="sayRecord" class="primary">● Say it</button>
+        <button id="sayNext" class="ghost">Next ›</button>
+      </div>
+      <p id="sayMsg" class="feedback"></p>
+    </div>
+
+    <div class="card">
+      <h3>Sentences</h3>
+      <div id="soundSentences" class="list"></div>
+    </div>
+  </main>
+
+  <!-- PROGRESS -->
+  <main id="tab-progress" class="panel" hidden>
+    <div class="stats">
+      <div class="stat"><span id="stAttempts">0</span>attempts</div>
+      <div class="stat"><span id="stAvg">–</span>average score</div>
+      <div class="stat"><span id="stStreak">0</span>day streak</div>
+    </div>
+    <div class="card">
+      <h3>Trouble words</h3>
+      <p class="hint">Words you missed most often. Tap one to practise it.</p>
+      <div id="trouble" class="chips"></div>
+    </div>
+    <div class="card">
+      <h3>Recent attempts</h3>
+      <div id="history" class="list"></div>
+    </div>
+    <button id="reset" class="ghost danger">Reset progress</button>
+  </main>
+
+  <footer>Works best in Chrome, Edge or Safari. Your voice is processed by the browser's speech service; recordings stay on your device.</footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
