@@ -5,6 +5,7 @@
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const synth = window.speechSynthesis;
   const buzz = (k) => window.haptic && window.haptic(k);
+  const xp = (n, kind) => window.AC && window.AC.addXP && window.AC.addXP(n, kind);
 
   // ---------- storage ----------
   const store = {
@@ -76,6 +77,33 @@
     return micStream;
   }
 
+  // Live input level so learners can see the mic hears them (drives --lvl on the button).
+  let audioCtx = null;
+  function startMeter(stream, button) {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const src = audioCtx.createMediaStreamSource(stream);
+      const an = audioCtx.createAnalyser();
+      an.fftSize = 512;
+      src.connect(an);
+      const buf = new Uint8Array(an.fftSize);
+      const m = { peak: 0, raf: 0 };
+      const tick = () => {
+        an.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+        const lvl = Math.min(1, Math.sqrt(sum / buf.length) * 4);
+        m.peak = Math.max(m.peak, lvl);
+        button.style.setProperty("--lvl", lvl.toFixed(3));
+        m.raf = requestAnimationFrame(tick);
+      };
+      tick();
+      m.stop = () => { cancelAnimationFrame(m.raf); src.disconnect(); button.style.setProperty("--lvl", 0); };
+      return m;
+    } catch { return null; }
+  }
+
   let active = null; // currently running capture, so a second click stops it
   /** Records audio and runs recognition together. Resolves {alts:[{text,conf}], blob}. */
   // opts.long: keep listening through pauses (free speaking) until the user taps stop.
@@ -85,9 +113,10 @@
     if (synth) synth.cancel();
     const lbl = button.querySelector(".lbl") || button; // keep icons inside the button
     const label = lbl.textContent;
-    let recorder = null, chunks = [];
+    let recorder = null, chunks = [], meter = null;
     try {
       const stream = await getMic();
+      meter = startMeter(stream, button);
       recorder = new MediaRecorder(stream);
       recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
       recorder.start();
@@ -127,6 +156,8 @@
     const alts = await Promise.race([recog, manualStop]);
     clearTimeout(active && active.timer);
     active = null;
+    const quiet = meter ? meter.peak < 0.08 : false;
+    if (meter) meter.stop();
     lbl.textContent = label;
     button.classList.remove("live");
 
@@ -135,7 +166,7 @@
       await new Promise((res) => { recorder.onstop = res; recorder.stop(); });
       blob = new Blob(chunks, { type: recorder.mimeType });
     }
-    return { alts, blob };
+    return { alts, blob, quiet };
   }
 
   // Merge several final result chunks into full-utterance alternatives.
@@ -246,7 +277,7 @@
   const troubleWords = () => Object.entries(progress.misses).sort((a, b) => b[1] - a[1]).map(([w]) => w);
 
   // ---------- SPEAK tab ----------
-  let idx = 0, myAudioUrl = null;
+  let idx = 0, myAudioUrl = null, lastQuiet = false;
   const list = () => {
     const s = $("source").value;
     if (s === "words") return D.words;
@@ -273,14 +304,19 @@
         span.classList.add(flags.every(Boolean) ? "ok" : "miss");
       }
       wi += n;
-      span.onclick = () => speak(tok.replace(/[^\w'’-]/g, ""), Math.min(+rateEl.value, 0.8));
+      span.onclick = () => {
+        const w = tok.replace(/[^\w'’-]/g, "");
+        speak(w, Math.min(+rateEl.value, 0.8));
+        if (window.AC && window.AC.showWordInfo) window.AC.showWordInfo(w, $("wordInfo"));
+      };
       el.append(span);
     });
   }
 
   function newTarget() {
     $("result").hidden = true;
-    $("playMine").disabled = $("compare").disabled = true;
+    $("playMine").disabled = $("compare").disabled = $("slowMine").disabled = true;
+    $("wordInfo").hidden = true;
     renderTarget();
   }
 
@@ -292,7 +328,14 @@
   $("custom").oninput = () => newTarget();
   $("prev").onclick = () => { idx--; newTarget(); };
   $("next").onclick = () => { idx++; newTarget(); };
-  $("listen").onclick = () => speak(targetText());
+  // Shadowing: optionally start recording the moment the model finishes speaking.
+  const autoRec = $("autoRec");
+  autoRec.checked = store.get("autoRec", false);
+  autoRec.onchange = () => store.set("autoRec", autoRec.checked);
+  $("listen").onclick = async () => {
+    await speak(targetText());
+    if (autoRec.checked && !active) $("record").click();
+  };
 
   $("record").onclick = async () => {
     const res = await capture($("record"));
@@ -300,9 +343,10 @@
     if (res.blob && res.blob.size) {
       if (myAudioUrl) URL.revokeObjectURL(myAudioUrl);
       myAudioUrl = URL.createObjectURL(res.blob);
-      $("playMine").disabled = $("compare").disabled = false;
+      $("playMine").disabled = $("compare").disabled = $("slowMine").disabled = false;
     }
     if (!SR) return;
+    lastQuiet = res.quiet;
     showResult(res.alts);
   };
 
@@ -315,7 +359,9 @@
       scoreEl.textContent = "?";
       $("verdict").textContent = "I didn't catch anything.";
       $("heard").textContent = "—";
-      $("feedback").textContent = "Speak a little louder and closer to the microphone, then try again.";
+      $("feedback").textContent = lastQuiet
+        ? "Your microphone level was very low. Hold the phone closer and speak louder."
+        : "Speak a little louder and closer to the microphone, then try again.";
       buzz("warn");
       return;
     }
@@ -326,6 +372,7 @@
     scoreEl.style.setProperty("--p", r.score);
     scoreEl.classList.add(r.score >= 85 ? "good" : r.score >= 60 ? "mid" : "low");
     buzz(r.score >= 85 ? "success" : r.score >= 60 ? "warn" : "error");
+    xp(Math.max(1, Math.round(r.score / 10)), "accent");
     $("verdict").textContent = r.score === 100 ? "Excellent — every word was clear!" :
       r.score >= 85 ? "Very good — nearly perfect." :
       r.score >= 60 ? "Good effort — a few words were unclear." : "Keep practising — listen again and copy the rhythm.";
@@ -367,13 +414,16 @@
       fb.append("Tap the red words to hear them on their own, then try the sentence again.");
   }
 
-  const playMine = () => new Promise((res) => {
+  const playMine = (rate = 1) => new Promise((res) => {
     if (!myAudioUrl) return res();
     const a = new Audio(myAudioUrl);
+    a.playbackRate = rate;
+    a.preservesPitch = a.webkitPreservesPitch = true;
     a.onended = a.onerror = res;
     a.play().catch(res);
   });
   $("playMine").onclick = () => playMine();
+  $("slowMine").onclick = () => playMine(0.7);
   $("compare").onclick = async () => { await speak(targetText()); await new Promise((r) => setTimeout(r, 400)); await playMine(); };
 
   // ---------- SOUNDS tab ----------
@@ -456,6 +506,7 @@
         quiz.n++;
         const right = w === word;
         if (right) quiz.ok++;
+        xp(right ? 2 : 0, "quiz");
         buzz(right ? "success" : "error");
         b.classList.add(right ? "right" : "wrong");
         if (!right) [...box.children].find((x) => x.textContent === word).classList.add("right");
@@ -487,6 +538,7 @@
     if (top.includes(word)) {
       msg.innerHTML = `<b class="good-t">Clear!</b> I heard “${escapeHtml(res.alts[0].text)}”.`;
       record(word, 100, [], [word]);
+      xp(3, "sounds");
       buzz("success");
     } else if (partner && top.includes(partner)) {
       buzz("error");
@@ -548,15 +600,18 @@
 
   // ---------- tabs ----------
   function showTab(name) {
-    document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === name));
+    const group = name === "sounds" ? "practice" : name;
+    document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === group));
+    document.querySelectorAll(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.go === name));
     document.querySelectorAll(".panel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
-    $("pageTitle").textContent = { practice: "Accent", sounds: "Sounds", vocab: "Vocabulary", progress: "Progress" }[name];
+    $("pageTitle").textContent = { today: "Today", practice: "Accent", sounds: "Accent", talk: "Conversations", vocab: "Vocabulary", progress: "Progress" }[name] || "";
     document.dispatchEvent(new CustomEvent("ac:tab", { detail: name }));
     if (name === "progress") renderProgress();
     window.scrollTo({ top: 0 });
     store.set("tab", name);
   }
   document.querySelectorAll(".tabs button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+  document.querySelectorAll(".seg button").forEach((b) => (b.onclick = () => showTab(b.dataset.go)));
 
   // ---------- settings sheet ----------
   const sheet = $("settingsSheet");
@@ -572,10 +627,10 @@
   $("settingsDone").onclick = () => { sheet.hidden = true; $("settingsBtn").setAttribute("aria-expanded", "false"); };
 
   // shared helpers for the vocabulary module (js/vocab.js)
-  window.AC = { speak, capture, words, buzz, store, showTab, hasRecognition: !!SR };
+  window.AC = Object.assign(window.AC || {}, { speak, capture, words, align, buzz, store, showTab, currentVoice, hasRecognition: !!SR });
 
   // ---------- init ----------
   selectSound(store.get("sound", D.sounds[0].id));
   newTarget();
-  document.addEventListener("DOMContentLoaded", () => showTab(store.get("tab", "practice")));
+  document.addEventListener("DOMContentLoaded", () => showTab(store.get("tab", "today")));
 })();

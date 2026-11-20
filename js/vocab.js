@@ -29,9 +29,39 @@
   }
 
   // ---------- topics ----------
+  const ALL = V.flatMap((t) => t.words.map((w) => ({ w, t })));
+  function reviewTopic() {
+    const due = AC.srs ? AC.srs.due() : [];
+    const words = due.map((d) => ALL.find((x) => x.w.w === d)).filter(Boolean).map((x) => x.w);
+    return { id: "review", name: `Review (${words.length})`, emoji: "🔁", level: "Beginner", words };
+  }
+  // open a single word (from "Word of the day")
+  AC.openVocabWord = (w) => {
+    const hit = ALL.find((x) => x.w.w === w);
+    if (!hit) return;
+    topic = hit.t; idx = topic.words.indexOf(hit.w);
+    AC.store.set("vocabTopic", topic.id);
+    render(); AC.showTab("vocab");
+  };
+  // open words due for spaced review
+  AC.openVocabReview = () => {
+    const r = reviewTopic();
+    if (!r.words.length) return;
+    topic = r; idx = 0;
+    render(); AC.showTab("vocab");
+  };
+
   function renderTopics() {
     const box = $("vocabTopics");
     box.innerHTML = "";
+    const r = topic.id === "review" ? topic : reviewTopic();
+    if (r.words.length) {
+      const b = document.createElement("button");
+      b.className = "review-chip" + (topic.id === "review" ? " on" : "");
+      b.textContent = `${r.emoji} ${r.name}`;
+      b.onclick = () => AC.openVocabReview();
+      box.append(b);
+    }
     V.forEach((t) => {
       const b = document.createElement("button");
       b.className = t.id === topic.id ? "on" : "";
@@ -59,6 +89,7 @@
     const e = word();
     const n = Math.min(mastery[e.w] || 0, MASTER_AT);
     $("vWord").textContent = e.w;
+    loadPronunciation(e.w);
     $("vPos").textContent = e.pos;
     $("vDef").textContent = e.def;
     $("vEx").textContent = e.ex;
@@ -105,6 +136,7 @@
     const top = AC.words(res.alts[0].text);
     if (top.some((t) => forms.has(t))) {
       msg.innerHTML = `<b class="good-t">✓ Clear!</b> Now use it in an answer below.`;
+      AC.addXP && AC.addXP(2);
       AC.buzz("success");
     } else if (res.alts.some((a) => AC.words(a.text).some((t) => forms.has(t)))) {
       msg.innerHTML = `<b>Almost.</b> I first heard “${esc(res.alts[0].text)}”. Listen and try once more.`;
@@ -179,6 +211,8 @@
       mastery[e.w] = (mastery[e.w] || 0) + 1;
       save();
     }
+    if (text && AC.srs) AC.srs.schedule(e.w, success); // spaced review: comes back in 1, 3, 7… days
+    if (text && AC.addXP) AC.addXP(stars * 4, "vocab");
     // vocab practice counts toward the daily streak too
     const prog = AC.store.get("progress", { attempts: 0, total: 0, misses: {}, history: [], days: [] });
     const today = new Date().toISOString().slice(0, 10);
@@ -221,6 +255,21 @@
   document.addEventListener("ac:reset", () => {
     mastery = {}; save(); AC.store.set("vocabLog", []); renderStats(); render();
   });
+
+  // IPA + recorded human pronunciation from the dictionary (when online)
+  let ipaFor = "";
+  async function loadPronunciation(w) {
+    ipaFor = w;
+    $("vIpa").textContent = "";
+    $("vReal").hidden = true;
+    if (!AC.lookup) return;
+    const info = await AC.lookup(w);
+    if (ipaFor !== w || !info) return;
+    $("vIpa").textContent = info.ipa || "";
+    const url = AC.pickAudio(info);
+    $("vReal").hidden = !url;
+    $("vReal").onclick = () => AC.playHuman(url);
+  }
 
   render();
   renderStats();

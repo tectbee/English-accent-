@@ -23,7 +23,7 @@
   <header class="top">
     <div>
       <p class="eyebrow">Accent Coach</p>
-      <h1 id="pageTitle">Accent</h1>
+      <h1 id="pageTitle">Today</h1>
     </div>
     <button id="settingsBtn" class="glass icon-btn" aria-label="Voice settings" aria-expanded="false" aria-controls="settingsSheet">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
@@ -53,8 +53,47 @@
 
   <div id="support" class="glass notice" hidden></div>
 
-  <!-- SPEAK -->
-  <main id="tab-practice" class="panel">
+  <!-- TODAY -->
+  <main id="tab-today" class="panel">
+    <p class="greeting" id="tGreeting">Hello 👋</p>
+    <div class="glass card goal-card">
+      <div class="ring" id="tRing"><div><b id="tXP">0</b><small id="tGoal">of 40 XP</small></div></div>
+      <div class="goal-side">
+        <div class="mini-stat"><span id="tStreak">0</span>🔥 day streak</div>
+        <div class="mini-stat"><span id="tTotal">0</span>⚡ total XP</div>
+        <p class="hint" id="tGoalMsg"></p>
+        <button id="tGoalEdit" class="chip-btn">Change daily goal</button>
+      </div>
+      <div id="tGoals" class="goal-picker" hidden></div>
+    </div>
+
+    <div id="tReview" class="glass card review-card" hidden>
+      <div><b>🔁 <span id="tReviewCount">0</span> <span id="tReviewWord">words</span> to review</b><small>Review them now so you don't forget.</small></div>
+      <button id="tReviewBtn" class="btn tinted">Review</button>
+    </div>
+
+    <h3 class="section-title">Today's plan</h3>
+    <div id="tPlan" class="plan"></div>
+
+    <h3 class="section-title">Word of the day</h3>
+    <div class="glass card wotd">
+      <span class="pill" id="tWordPos"></span>
+      <div class="wotd-row">
+        <b id="tWord" class="wotd-word"></b>
+        <button id="tWordListen" class="glass round small" aria-label="Hear the word">🔊</button>
+      </div>
+      <p id="tWordDef" class="hint"></p>
+      <button id="tWordGo" class="btn glass wide">Practise this word ›</button>
+    </div>
+  </main>
+
+  <!-- ACCENT: SENTENCES -->
+  <main id="tab-practice" class="panel" hidden>
+    <div class="seg glass" role="group" aria-label="Accent practice type">
+      <button data-go="practice" aria-pressed="true">🎯 Sentences</button>
+      <button data-go="sounds" aria-pressed="false">👂 Sounds</button>
+    </div>
+
     <div class="pick">
       <div class="glass select-wrap">
         <select id="source" aria-label="What to practise">
@@ -71,7 +110,8 @@
 
     <div class="glass card target">
       <p id="target" class="target-text"></p>
-      <p class="hint">Tap any word to hear it on its own.</p>
+      <p class="hint">Tap any word to hear it and see how it's pronounced.</p>
+      <p id="wordInfo" class="word-info" hidden></p>
     </div>
 
     <ol class="steps" aria-label="How to practise">
@@ -94,8 +134,6 @@
         <span class="cap">My voice</span>
       </button>
     </div>
-    <button id="compare" class="btn glass wide" disabled>⇄ Compare: model, then me</button>
-
     <div id="result" class="glass card result" hidden>
       <div class="score-row">
         <div class="score" id="score">–</div>
@@ -106,10 +144,23 @@
       </div>
       <div id="feedback" class="feedback"></div>
     </div>
+    <div class="two">
+      <button id="compare" class="btn glass" disabled>⇄ Compare</button>
+      <button id="slowMine" class="btn glass" disabled>🐢 My voice slow</button>
+    </div>
+    <label class="glass toggle-row">
+      <span><b>Shadowing mode</b><small>Start recording as soon as the model finishes</small></span>
+      <input id="autoRec" type="checkbox" switch>
+    </label>
+
   </main>
 
-  <!-- SOUNDS -->
+  <!-- ACCENT: SOUNDS -->
   <main id="tab-sounds" class="panel" hidden>
+    <div class="seg glass" role="group" aria-label="Accent practice type">
+      <button data-go="practice" aria-pressed="false">🎯 Sentences</button>
+      <button data-go="sounds" aria-pressed="true">👂 Sounds</button>
+    </div>
     <div class="chips scroll" id="soundChips"></div>
     <div class="glass card">
       <h2 id="soundName"></h2>
@@ -146,6 +197,45 @@
     </div>
   </main>
 
+  <!-- CONVERSATIONS -->
+  <main id="tab-talk" class="panel" hidden>
+    <div id="talkHome">
+      <p class="hint lead">Practise real conversations. Your partner speaks, and you answer out loud.</p>
+      <div id="talkList" class="scenarios"></div>
+    </div>
+    <div id="talkChat" hidden>
+      <div class="chat-head">
+        <button id="chatBack" class="glass icon-btn" aria-label="Back to conversations">‹</button>
+        <div><b id="chatTitle"></b><span id="chatDots" class="chat-dots"></span></div>
+      </div>
+      <div id="chatLog" class="chat-log"></div>
+      <div id="composer" class="glass card composer">
+        <p id="suggestLabel" class="hint"></p>
+        <div id="suggest" class="suggestions"></div>
+        <p id="talkLive" class="live-text" aria-live="polite" hidden></p>
+        <div class="answer-dock">
+          <button id="talkMic" class="mic" data-stop="Tap to stop" aria-label="Reply">
+            <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+            <span class="cap lbl">Tap to reply</span>
+          </button>
+        </div>
+        <label class="toggle-row plain">
+          <span><b>Challenge mode</b><small>Hide the suggested replies</small></span>
+          <input id="talkHide" type="checkbox" switch>
+        </label>
+      </div>
+      <div id="talkEnd" class="glass card result" hidden>
+        <div class="stars" id="endStars"></div>
+        <p class="verdict center" id="endScore"></p>
+        <p class="hint center" id="endMsg"></p>
+        <div class="row-actions center">
+          <button id="endAgain" class="btn glass">↻ Try again</button>
+          <button id="endBack" class="btn tinted">More conversations</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
   <!-- VOCABULARY SPEAKING -->
   <main id="tab-vocab" class="panel" hidden>
     <div class="chips scroll" id="vocabTopics"></div>
@@ -161,6 +251,7 @@
         <div>
           <span class="pill" id="vPos"></span>
           <h2 class="vword"><span id="vWord"></span> <span id="vMastered" class="badge" hidden>✓ Mastered</span></h2>
+          <p class="ipa-line"><span id="vIpa" class="ipa"></span> <button id="vReal" class="chip-btn" hidden>🎙️ Real voice</button></p>
         </div>
         <button id="vWordListen" class="glass round small" aria-label="Hear the word">🔊</button>
       </div>
@@ -242,13 +333,17 @@
   </main>
 
   <nav class="glass tabbar tabs" role="tablist">
-    <button role="tab" data-tab="practice" aria-selected="true">
+    <button role="tab" data-tab="today" aria-selected="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+      <span>Today</span>
+    </button>
+    <button role="tab" data-tab="practice" aria-selected="false">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
       <span>Accent</span>
     </button>
-    <button role="tab" data-tab="sounds" aria-selected="false">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/></svg>
-      <span>Sounds</span>
+    <button role="tab" data-tab="talk" aria-selected="false">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M17 9h3a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1v3l-4-3h-2"/></svg>
+      <span>Talk</span>
     </button>
     <button role="tab" data-tab="vocab" aria-selected="false">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2V5z"/><path d="M4 20a2 2 0 0 0 2 1h13M9 8h6M9 12h4"/></svg>
@@ -263,8 +358,11 @@
   <script src="js/haptics.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/coach.js"></script>
   <script src="js/vocab-data.js"></script>
   <script src="js/vocab.js"></script>
+  <script src="js/talk-data.js"></script>
+  <script src="js/talk.js"></script>
   <script src="js/install.js"></script>
 </body>
 </html>
