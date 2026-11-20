@@ -2,73 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Accent Coach</title>
-  <meta name="theme-color" content="#2f5bd3">
+  <meta name="theme-color" content="#eef0fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0d1a" media="(prefers-color-scheme: dark)">
   <meta name="description" content="Practise English pronunciation: listen, record yourself and get word-by-word feedback.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Accent">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- soft moving colour behind the glass -->
+  <div class="backdrop" aria-hidden="true"><i></i><i></i><i></i></div>
+
   <header class="top">
-    <h1>Accent Coach</h1>
-    <nav class="tabs" role="tablist">
-      <button role="tab" data-tab="practice" aria-selected="true">Speak</button>
-      <button role="tab" data-tab="sounds" aria-selected="false">Sounds</button>
-      <button role="tab" data-tab="progress" aria-selected="false">Progress</button>
-    </nav>
+    <div>
+      <p class="eyebrow">Accent Coach</p>
+      <h1 id="pageTitle">Speak</h1>
+    </div>
+    <button id="settingsBtn" class="glass icon-btn" aria-label="Voice settings" aria-expanded="false" aria-controls="settingsSheet">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
   </header>
 
-  <div id="install" class="install" hidden>
-    <span id="installText">Add Accent Coach to your home screen for one-tap practice.</span>
-    <button id="installBtn" class="primary">Add to home screen</button>
-    <button id="installClose" class="ghost" aria-label="Dismiss">✕</button>
-  </div>
-
-  <div id="support" class="notice" hidden></div>
-
-  <section class="settings">
+  <section id="settingsSheet" class="glass sheet" hidden>
     <label>Accent / voice
       <select id="voice"></select>
     </label>
-    <label>Speed <span id="rateVal">0.9×</span>
+    <label>Speed <span id="rateVal" class="pill">0.9×</span>
       <input id="rate" type="range" min="0.5" max="1.2" step="0.05" value="0.9">
     </label>
+    <button id="settingsDone" class="btn tinted">Done</button>
   </section>
+
+  <div id="install" class="glass install" hidden>
+    <img src="icons/icon-192.png" alt="" width="40" height="40">
+    <span id="installText">Add Accent Coach to your home screen for one-tap practice.</span>
+    <button id="installBtn" class="btn tinted">Add</button>
+    <button id="installClose" class="icon-btn plain" aria-label="Dismiss">✕</button>
+  </div>
+
+  <div id="support" class="glass notice" hidden></div>
 
   <!-- SPEAK -->
   <main id="tab-practice" class="panel">
     <div class="pick">
-      <select id="source">
-        <option value="sentences">Everyday sentences</option>
-        <option value="words">Tricky words</option>
-        <option value="review">My trouble words</option>
-        <option value="custom">My own text…</option>
-      </select>
-      <button id="prev" class="ghost" aria-label="Previous">‹</button>
-      <button id="next" class="ghost" aria-label="Next">›</button>
+      <div class="glass select-wrap">
+        <select id="source" aria-label="What to practise">
+          <option value="sentences">Everyday sentences</option>
+          <option value="words">Tricky words</option>
+          <option value="review">My trouble words</option>
+          <option value="custom">My own text…</option>
+        </select>
+      </div>
+      <button id="prev" class="glass icon-btn" aria-label="Previous">‹</button>
+      <button id="next" class="glass icon-btn" aria-label="Next">›</button>
     </div>
-    <textarea id="custom" rows="2" placeholder="Type or paste anything you want to practise…" hidden></textarea>
+    <textarea id="custom" class="glass" rows="2" placeholder="Type or paste anything you want to practise…" hidden></textarea>
 
-    <div class="card target">
+    <div class="glass card target">
       <p id="target" class="target-text"></p>
-      <p class="hint">Tap any word to hear it alone.</p>
+      <p class="hint">Tap any word to hear it on its own.</p>
     </div>
 
-    <div class="actions">
-      <button id="listen" class="secondary">▶ Listen</button>
-      <button id="record" class="primary">● Record &amp; check</button>
-      <button id="playMine" class="secondary" disabled>▶ My voice</button>
-      <button id="compare" class="secondary" disabled>⇄ Compare</button>
-    </div>
+    <ol class="steps" aria-label="How to practise">
+      <li><span>1</span>Listen</li>
+      <li><span>2</span>Speak</li>
+      <li><span>3</span>Compare</li>
+    </ol>
 
-    <div id="result" class="card result" hidden>
+    <div class="dock">
+      <button id="listen" class="glass round side" aria-label="Listen to the model">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+        <span class="cap">Listen</span>
+      </button>
+      <button id="record" class="mic" data-stop="Tap to stop" aria-label="Record and check">
+        <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+        <span class="cap lbl">Tap to speak</span>
+      </button>
+      <button id="playMine" class="glass round side" aria-label="Play my voice" disabled>
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+        <span class="cap">My voice</span>
+      </button>
+    </div>
+    <button id="compare" class="btn glass wide" disabled>⇄ Compare: model, then me</button>
+
+    <div id="result" class="glass card result" hidden>
       <div class="score-row">
         <div class="score" id="score">–</div>
         <div>
@@ -76,44 +100,44 @@
           <p class="heard">I heard: <em id="heard"></em></p>
         </div>
       </div>
-      <p id="feedback" class="feedback"></p>
+      <div id="feedback" class="feedback"></div>
     </div>
   </main>
 
   <!-- SOUNDS -->
   <main id="tab-sounds" class="panel" hidden>
-    <div class="chips" id="soundChips"></div>
-    <div class="card">
+    <div class="chips scroll" id="soundChips"></div>
+    <div class="glass card">
       <h2 id="soundName"></h2>
       <p id="soundTip" class="tip"></p>
       <div id="pairs" class="pairs"></div>
     </div>
 
-    <div class="card">
-      <h3>Ear training</h3>
-      <p class="hint">Listen and choose the word you hear. Hearing the difference comes before saying it.</p>
-      <div class="actions">
-        <button id="quizPlay" class="primary">▶ Play a word</button>
-        <span class="quiz-score" id="quizScore">0 / 0</span>
+    <div class="glass card">
+      <h3>👂 Ear training</h3>
+      <p class="hint">Listen, then choose the word you hear.</p>
+      <div class="row-actions">
+        <button id="quizPlay" class="btn tinted">▶ Play a word</button>
+        <span class="pill" id="quizScore">0 / 0</span>
       </div>
       <div id="quizChoices" class="choices"></div>
       <p id="quizMsg" class="feedback"></p>
     </div>
 
-    <div class="card">
-      <h3>Say it</h3>
-      <p class="hint">Say the word shown. The recogniser has to tell it apart from its pair.</p>
-      <p id="sayWord" class="target-text small"></p>
-      <div class="actions">
-        <button id="sayListen" class="secondary">▶ Listen</button>
-        <button id="sayRecord" class="primary">● Say it</button>
-        <button id="sayNext" class="ghost">Next ›</button>
+    <div class="glass card">
+      <h3>🗣️ Say it</h3>
+      <p class="hint">Say this word clearly. Don't let it sound like its pair!</p>
+      <p id="sayWord" class="say-word"></p>
+      <div class="row-actions center">
+        <button id="sayListen" class="btn glass">▶ Listen</button>
+        <button id="sayRecord" class="btn tinted" data-stop="■ Stop"><span class="lbl">● Say it</span></button>
+        <button id="sayNext" class="btn glass">Next ›</button>
       </div>
       <p id="sayMsg" class="feedback"></p>
     </div>
 
-    <div class="card">
-      <h3>Sentences</h3>
+    <div class="glass card">
+      <h3>📝 Sentences</h3>
       <div id="soundSentences" class="list"></div>
     </div>
   </main>
@@ -121,23 +145,37 @@
   <!-- PROGRESS -->
   <main id="tab-progress" class="panel" hidden>
     <div class="stats">
-      <div class="stat"><span id="stAttempts">0</span>attempts</div>
-      <div class="stat"><span id="stAvg">–</span>average score</div>
-      <div class="stat"><span id="stStreak">0</span>day streak</div>
+      <div class="glass stat"><span id="stAttempts">0</span>attempts</div>
+      <div class="glass stat"><span id="stAvg">–</span>average</div>
+      <div class="glass stat"><span id="stStreak">0</span>day streak 🔥</div>
     </div>
-    <div class="card">
+    <div class="glass card">
       <h3>Trouble words</h3>
-      <p class="hint">Words you missed most often. Tap one to practise it.</p>
+      <p class="hint">The words you miss most. Tap one to practise it.</p>
       <div id="trouble" class="chips"></div>
     </div>
-    <div class="card">
+    <div class="glass card">
       <h3>Recent attempts</h3>
       <div id="history" class="list"></div>
     </div>
-    <button id="reset" class="ghost danger">Reset progress</button>
+    <button id="reset" class="btn glass danger wide">Reset progress</button>
+    <p class="foot">Works best in Chrome, Edge or Safari. Your voice is checked by the browser's speech service; recordings stay on your device.</p>
   </main>
 
-  <footer>Works best in Chrome, Edge or Safari. Your voice is processed by the browser's speech service; recordings stay on your device.</footer>
+  <nav class="glass tabbar tabs" role="tablist">
+    <button role="tab" data-tab="practice" aria-selected="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+      <span>Speak</span>
+    </button>
+    <button role="tab" data-tab="sounds" aria-selected="false">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/></svg>
+      <span>Sounds</span>
+    </button>
+    <button role="tab" data-tab="progress" aria-selected="false">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span>Progress</span>
+    </button>
+  </nav>
 
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>

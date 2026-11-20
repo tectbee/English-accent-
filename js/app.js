@@ -80,7 +80,8 @@
   async function capture(button) {
     if (active) { active.stop(); return null; }
     if (synth) synth.cancel();
-    const label = button.textContent;
+    const lbl = button.querySelector(".lbl") || button; // keep icons inside the button
+    const label = lbl.textContent;
     let recorder = null, chunks = [];
     try {
       const stream = await getMic();
@@ -90,7 +91,7 @@
     } catch (e) {
       if (!SR) { alert("Microphone access is needed to record your voice."); return null; }
     }
-    button.textContent = "■ Stop";
+    lbl.textContent = button.dataset.stop || "■ Stop";
     button.classList.add("live");
 
     let stopRecog;
@@ -118,7 +119,7 @@
 
     const alts = await Promise.race([recog, manualStop]);
     active = null;
-    button.textContent = label;
+    lbl.textContent = label;
     button.classList.remove("live");
 
     let blob = null;
@@ -301,6 +302,7 @@
     $("result").hidden = false;
     const scoreEl = $("score");
     scoreEl.className = "score";
+    scoreEl.style.setProperty("--p", 0);
     if (!alts.length) {
       scoreEl.textContent = "?";
       $("verdict").textContent = "I didn't catch anything.";
@@ -312,6 +314,7 @@
     const r = bestMatch(text, alts);
     renderTarget(r.ok);
     scoreEl.textContent = r.score + "%";
+    scoreEl.style.setProperty("--p", r.score);
     scoreEl.classList.add(r.score >= 85 ? "good" : r.score >= 60 ? "mid" : "low");
     $("verdict").textContent = r.score === 100 ? "Excellent — every word was clear!" :
       r.score >= 85 ? "Very good — nearly perfect." :
@@ -533,10 +536,20 @@
   function showTab(name) {
     document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === name));
     document.querySelectorAll(".panel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
+    $("pageTitle").textContent = { practice: "Speak", sounds: "Sounds", progress: "Progress" }[name];
     if (name === "progress") renderProgress();
+    window.scrollTo({ top: 0 });
     store.set("tab", name);
   }
   document.querySelectorAll(".tabs button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+
+  // ---------- settings sheet ----------
+  const sheet = $("settingsSheet");
+  $("settingsBtn").onclick = () => {
+    sheet.hidden = !sheet.hidden;
+    $("settingsBtn").setAttribute("aria-expanded", !sheet.hidden);
+  };
+  $("settingsDone").onclick = () => { sheet.hidden = true; $("settingsBtn").setAttribute("aria-expanded", "false"); };
 
   // ---------- init ----------
   selectSound(store.get("sound", D.sounds[0].id));

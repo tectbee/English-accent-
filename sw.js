@@ -1,6 +1,6 @@
 // Caches the app so the home-screen shortcut opens instantly and works offline.
 // (Speech recognition itself may still need a connection, depending on the browser.)
-const CACHE = "accent-coach-v1";
+const CACHE = "accent-coach-v2";
 const FILES = ["./", "index.html", "style.css", "js/data.js", "js/app.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
